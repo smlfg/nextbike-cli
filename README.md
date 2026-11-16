@@ -1,34 +1,48 @@
-# cli-mcp-template
-Project template for CLIs and MCP servers with the shared test suite
+# nextbike-cli
 
-> **Hinweis:** Die Fabrik, die aus dieser Vorlage Werkzeuge baut (Workflow, UX-Gate, Pipeline), liegt jetzt in [smlfg/software-factory](https://github.com/smlfg/software-factory). Die Vorlage selbst bleibt vorerst hier.
+Live-Verfügbarkeit von nextbike-Leihrädern im Terminal: Stadt per Name finden, Stationen per Stichwort suchen, freie Räder und Stellplätze prüfen, Stationen in der Nähe finden, ein Rad per Nummer nachschlagen und eine Station beobachten. Lesend, ohne Login und ohne App.
 
-## Schritt 0: UX-Spec zuerst
+## Schnellstart
 
-Der komplette Ablauf steht in [agent-learnings/WORKFLOW.md](https://github.com/smlfg/agent-learnings/blob/main/WORKFLOW.md).
+```console
+pipx install git+https://github.com/smlfg/nextbike-cli
+nextbike stationen Mannheim Lindenhof
+nextbike station "Lindenhof - Jugendherberge" --stadt Mannheim
+```
 
-1. Vor jeder Codezeile `docs/UX.md` ausfüllen (Vorlage liegt hier): die 3 wichtigsten Nutzer-Aufgaben als abtippbare Terminal-Sitzungen (pipx-Installation, `<tool> login`, Suche per Name, schreibende Aktion bis zur letzten Seite mit `[j/N]`), dazu alle live erkundeten Formularschritte und Fixtures unter `tests/fixtures/ux/`.
-2. Spec prüfen: `python3 tests/harness/ux_spec.py docs/UX.md`
-3. Gate nach dem Bau (beide müssen grün sein, sonst ist der Build nicht fertig):
-   - `python3 tests/harness/ux_check.py .` (UX-Lint UX01–UX08)
-   - `python3 tests/harness/ux_session.py .` (spielt die Sitzungen im Pseudo-Terminal gegen einen Fake-Server durch und prüft, dass ALLE Formularschritte gesendet werden)
+## Befehle
 
-`tests/harness/` wird unverändert aus agent-learnings übernommen.
+| Befehl | Zweck |
+|---|---|
+| `nextbike staedte [SUCHE]` | Städte per Name finden (UID und Stationszahl) |
+| `nextbike stationen STADT [SUCHBEGRIFF]` | Stationen einer Stadt per Stichwort suchen |
+| `nextbike station NAME\|NUMMER [--stadt STADT]` | Details einer Station inklusive Radnummern |
+| `nextbike nah LAT,LNG [--stadt STADT] [--radius M]` | Nächste Stationen mit Entfernung |
+| `nextbike rad NUMMER [--stadt STADT]` | Station und Zustand eines Rads |
+| `nextbike watch NAME [--unter N]` | Verfügbarkeit beobachten und Änderungen melden |
+| `nextbike config stadt STADT` | Standardstadt speichern |
 
-## Pflichtregel: Bedienbarkeit für Menschen
+Ohne TTY oder mit `--json` gibt das Tool JSON aus. Fehler nennen den nächsten Schritt und enden ohne Traceback. `--version` und `--help` funktionieren überall.
 
-Jede CLI muss für Menschen bedienbar sein: `login`-Kommando statt nur Env, Namen statt IDs, interaktive Bestätigung im TTY, `--confirm` nur für Agenten, README-Schnellstart.
+## Daten und Zwischenspeicher
 
-- `login` fragt im Terminal interaktiv (Passwort per getpass) und speichert im Schlüsselbund oder in einer Config-Datei mit 0600; dazu `logout` und `whoami`/`status` ohne Passwort-Ausgabe. Env-Variablen überschreiben die Config (für Agenten).
-- Namen/Freitext positional (`tool book volleyball`, `tool search fahrrad`); mehrere Treffer → nummerierte Auswahl im TTY, ohne TTY Liste + Exit Usage.
-- Schreibende Aktionen: im TTY „… verbindlich? [j/N]“; `--confirm`/`--yes` nur für Agenten; ohne TTY und ohne Flag kein Request.
-- Terminal-Ausgabe lesbar; JSON mit `--json` oder wenn stdout kein Terminal ist.
-- Fehler nennen den nächsten Schritt, keine Tracebacks bei EOF/Strg+C/fehlender optionaler Abhängigkeit.
-- README beginnt mit „Schnellstart“: `pipx install git+https://github.com/smlfg/<repo>`, Login, ein typischer Befehl.
+Die öffentliche nextbike-Karte liegt unter `https://maps2.nextbike.net/maps`. Die Städteliste wird 24 Stunden gecacht, Live-Daten 60 Sekunden. Standardstadt, Cache und Watch-Stand liegen unter `~/.config`, `~/.cache` bzw. `~/.local/state` in `nextbike-cli`-Verzeichnissen; Dateien mit persönlichen Einstellungen haben Rechte 0600.
 
-### Pflicht-QA-Prüfpunkt „Bedienbarkeit für Menschen“
+Für Tests und Fake-Server lässt sich die Basis-URL mit `NEXTBIKE_BASE_URL` überschreiben.
 
-1. Frisch per `pipx install git+…` installieren, Befehl direkt im PATH aufrufen.
-2. Haupt-Use-Case nur mit `--help` im Pseudo-Terminal (`script -qc "…" /dev/null`) durchspielen: `login` interaktiv, Suche per Name, Bestätigungsfrage mit „N“ → nichts gesendet.
-3. Ohne Login: Fehlermeldung nennt `tool login`.
-4. FAIL, wenn eine Kernaktion nur über Env-Variablen, interne IDs oder `--confirm` erreichbar ist.
+## Entwicklung
+
+Die UX-Spec steht in [docs/UX.md](docs/UX.md). Vor dem Bau prüfen:
+
+```bash
+python3 tests/harness/ux_check.py . --spec-only
+```
+
+Nach dem Bau müssen UX-Gate und Sitzungen grün sein:
+
+```bash
+python3 tests/harness/ux_check.py .
+python3 tests/harness/ux_session.py .
+```
+
+Lizenz: MIT, Copyright smlfg.
