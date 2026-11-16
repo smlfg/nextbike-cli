@@ -8,6 +8,7 @@ from typing import Any, Callable
 from . import __version__, store
 from .client import Api, haversine_m
 from .errors import CliError, usage
+from .normalize import normalize
 from .search import city_matches, resolve_city, resolve_station
 
 DEFAULT_CITY_HINT = (
@@ -71,6 +72,26 @@ def _build_parser() -> Parser:
     staedte.add_argument("suche", nargs="?", help="Teil des Stadtnamens")
     _add_json_option(staedte)
     staedte.set_defaults(func=cmd_staedte)
+
+    stationen = subparsers.add_parser(
+        "stationen", help="Stationen einer Stadt suchen"
+    )
+    stationen.add_argument("stadt", help="Stadtname")
+    stationen.add_argument("suchbegriff", nargs="?", help="Teil des Stationsnamens")
+    stationen.add_argument(
+        "--min-raeder",
+        type=_non_negative_int,
+        default=None,
+        metavar="N",
+        help="nur Stationen mit mindestens N ausleihbaren Rädern",
+    )
+    stationen.add_argument(
+        "--nur-frei",
+        action="store_true",
+        help="nur Stationen mit mindestens einem ausleihbaren Rad",
+    )
+    _add_json_option(stationen)
+    stationen.set_defaults(func=cmd_stationen)
 
     return parser
 
@@ -214,6 +235,57 @@ def cmd_staedte(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
     for city in matches:
         lines.append(
             f"{city['name']} (UID {city['uid']}, {city['num_places']} Stationen)"
+        )
+    _emit(json_mode, lines, payload)
+    return 0
+
+
+def cmd_stationen(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
+    city = _resolve_city(api, args.stadt)
+    data_city, places = api.city(city["uid"])
+    city = {**city, "name": data_city.get("name", city["name"])}
+    need = normalize(args.suchbegriff) if args.suchbegriff else ""
+    matches: list[dict[str, Any]] = []
+    for place in places:
+        if place.get("bike"):
+            continue
+        available = _as_int(place.get("bikes_available_to_rent")) or 0
+        if need and need not in normalize(place.get("name")):
+            continue
+        if args.min_raeder is not None and available < args.min_raeder:
+            continue
+        if args.nur_frei and available <= 0:
+            continue
+        matches.append(place)
+    payload = {
+        "stadt": {"uid": city["uid"], "name": city["name"]},
+        "suche": args.suchbegriff,
+        "stationen": [_station_payload(place) for place in matches],
+    }
+    if not matches:
+        query = args.suchbegriff
+        lines = [
+            (
+                f"Keine Stationen in {city['name']} zu „{query}“ gefunden."
+                if query
+                else f"Keine Stationen in {city['name']} gefunden."
+            ),
+            "Lockere die Filter oder nutze nextbike stationen STADT ohne Suchbegriff.",
+        ]
+        _emit(json_mode, lines, payload)
+        return 0
+    title = (
+        f"Stationen in {city['name']} zu „{args.suchbegriff}“ "
+        f"({len(matches)} Treffer):"
+        if args.suchbegriff
+        else f"Stationen in {city['name']} ({len(matches)} Treffer):"
+    )
+    lines = [title]
+    for place in matches:
+        lines.append(
+            f"{place.get('number')} · {place.get('name')} · "
+            f"{_as_int(place.get('bikes_available_to_rent')) or 0} ausleihbar, "
+            f"{_as_int(place.get('free_racks')) or 0} Stellplätze frei"
         )
     _emit(json_mode, lines, payload)
     return 0
