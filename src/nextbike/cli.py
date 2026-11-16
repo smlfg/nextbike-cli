@@ -101,6 +101,21 @@ def _build_parser() -> Parser:
     _add_json_option(station)
     station.set_defaults(func=cmd_station)
 
+    nah = subparsers.add_parser(
+        "nah", help="Stationen im Umkreis von Koordinaten finden"
+    )
+    nah.add_argument("koordinaten", help="LAT,LNG")
+    nah.add_argument("--stadt", help="Stadtname")
+    nah.add_argument(
+        "--radius",
+        type=_positive_int,
+        default=1000,
+        metavar="M",
+        help="Radius in Metern (Standard 1000)",
+    )
+    _add_json_option(nah)
+    nah.set_defaults(func=cmd_nah)
+
     return parser
 
 
@@ -387,6 +402,126 @@ def _as_float(value: object) -> float | None:
         return float(value)  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return None
+
+
+def _parse_coordinates(text: str) -> tuple[float, float]:
+    import math
+
+    parts = [part.strip() for part in text.split(",")]
+    if len(parts) != 2 or not all(parts):
+        raise usage(
+            f"Koordinaten „{text}“ sind ungültig.",
+            "Nutze LAT,LNG, zum Beispiel 49.4771,8.4637.",
+        )
+    try:
+        lat, lng = float(parts[0]), float(parts[1])
+    except ValueError:
+        raise usage(
+            f"Koordinaten „{text}“ sind ungültig.",
+            "Nutze LAT,LNG, zum Beispiel 49.4771,8.4637.",
+        ) from None
+    if not (math.isfinite(lat) and math.isfinite(lng)) or not (
+        -90 <= lat <= 90 and -180 <= lng <= 180
+    ):
+        raise usage(
+            f"Koordinaten „{text}“ liegen außerhalb des gültigen Bereichs.",
+            "Breite -90..90 und Länge -180..180 angeben.",
+        )
+    return lat, lng
+
+
+def _city_for_near(
+    api: Api, args: argparse.Namespace, lat: float, lng: float
+) -> dict[str, Any]:
+    if getattr(args, "stadt", None):
+        return _resolve_city(api, args.stadt)
+    config = _load_config()
+    saved = config.get("stadt")
+    if isinstance(saved, dict) and "uid" in saved and "name" in saved:
+        try:
+            return {
+                "uid": int(saved["uid"]),
+                "name": str(saved["name"]),
+                "num_places": int(saved.get("num_places") or 0),
+            }
+        except (TypeError, ValueError):
+            pass
+    cities = [
+        city
+        for city in api.cities()
+        if _as_float(city.get("lat")) is not None
+        and _as_float(city.get("lng")) is not None
+    ]
+    if not cities:
+        raise CliError(
+            "KEINE_DATEN",
+            "Keine Stadt mit Mittelpunkt gefunden.",
+            "Nutze --stadt STADT.",
+            1,
+        )
+    return min(
+        cities,
+        key=lambda city: haversine_m(
+            lat,
+            lng,
+            _as_float(city.get("lat")) or 0.0,
+            _as_float(city.get("lng")) or 0.0,
+        ),
+    )
+
+
+def cmd_nah(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
+    lat, lng = _parse_coordinates(args.koordinaten)
+    city = _city_for_near(api, args, lat, lng)
+    data_city, places = api.city(city["uid"])
+    city = {**city, "name": data_city.get("name", city["name"])}
+    found: list[tuple[int, dict[str, Any]]] = []
+    for place in places:
+        if place.get("bike"):
+            continue
+        place_lat = _as_float(place.get("lat"))
+        place_lng = _as_float(place.get("lng"))
+        if place_lat is None or place_lng is None:
+            continue
+        distance = haversine_m(lat, lng, place_lat, place_lng)
+        if distance <= args.radius:
+            found.append((distance, place))
+    found.sort(key=lambda item: (item[0], normalize(item[1].get("name"))))
+    payload = {
+        "mittelpunkt": {"lat": lat, "lng": lng},
+        "radius_m": args.radius,
+        "stadt": _city_ref(city),
+        "stationen": [
+            {
+                "entfernung_m": distance,
+                **_station_payload(place),
+            }
+            for distance, place in found
+        ],
+    }
+    if not found:
+        _emit(
+            json_mode,
+            [
+                f"Keine Station im Umkreis von {args.radius} m um "
+                f"{_format_coord(lat)}, {_format_coord(lng)} gefunden.",
+                "Erhöhe den Radius mit --radius.",
+            ],
+            payload,
+        )
+        return 0
+    lines = [
+        f"Stationen im Umkreis von {args.radius} m um "
+        f"{_format_coord(lat)}, {_format_coord(lng)} ({city['name']}):"
+    ]
+    for distance, place in found:
+        lines.append(
+            f"{distance} m · {place.get('name')} ({place.get('number')}) · "
+            f"{_as_int(place.get('bikes_available_to_rent')) or 0} ausleihbar, "
+            f"{_as_int(place.get('free_racks')) or 0} Stellplätze frei"
+        )
+    _emit(json_mode, lines, payload)
+    return 0
 
 
 def _report_error(error: CliError, json_mode: bool) -> int:
