@@ -137,6 +137,15 @@ def _build_parser() -> Parser:
     _add_json_option(watch)
     watch.set_defaults(func=cmd_watch)
 
+    config = subparsers.add_parser("config", help="Konfiguration verwalten")
+    config_sub = config.add_subparsers(dest="config_command", metavar="SCHLUESSEL")
+    config_stadt = config_sub.add_parser(
+        "stadt", help="Standardstadt anzeigen oder setzen"
+    )
+    config_stadt.add_argument("name", nargs="?", help="Stadtname")
+    _add_json_option(config_stadt)
+    config_stadt.set_defaults(func=cmd_config)
+
     return parser
 
 
@@ -705,6 +714,59 @@ def cmd_watch(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
             f"Warnung: {available} ausleihbar, unter Schwelle {args.unter}."
         )
     _emit(json_mode, lines, payload)
+    return 0
+
+
+def cmd_config(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
+    if getattr(args, "config_command", None) != "stadt":
+        raise usage(
+            "Unbekannter Konfigurationsschlüssel.",
+            "Nutze nextbike config stadt [STADT].",
+        )
+    if args.name:
+        city = _resolve_city(api, args.name)
+        config = _load_config()
+        config["stadt"] = {
+            "uid": city["uid"],
+            "name": city["name"],
+            "num_places": city.get("num_places", 0),
+        }
+        _save_config(config)
+        payload = {
+            "standardstadt": {
+                "uid": city["uid"],
+                "name": city["name"],
+            }
+        }
+        _emit(
+            json_mode,
+            [f"Standardstadt: {city['name']} (UID {city['uid']})."],
+            payload,
+        )
+        return 0
+    config = _load_config()
+    saved = config.get("stadt")
+    if isinstance(saved, dict) and "uid" in saved and "name" in saved:
+        payload = {
+            "standardstadt": {
+                "uid": _as_int(saved.get("uid")),
+                "name": str(saved.get("name")),
+            }
+        }
+        _emit(
+            json_mode,
+            [f"Standardstadt: {saved['name']} (UID {saved['uid']})."],
+            payload,
+        )
+        return 0
+    _emit(
+        json_mode,
+        [
+            "Keine Standardstadt gesetzt.",
+            "Setze sie mit nextbike config stadt STADT.",
+        ],
+        {"standardstadt": None},
+    )
     return 0
 
 
