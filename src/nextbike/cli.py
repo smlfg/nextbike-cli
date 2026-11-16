@@ -93,6 +93,14 @@ def _build_parser() -> Parser:
     _add_json_option(stationen)
     stationen.set_defaults(func=cmd_stationen)
 
+    station = subparsers.add_parser(
+        "station", help="Details einer Station anzeigen"
+    )
+    station.add_argument("name", help="Stationsname oder Stationsnummer")
+    station.add_argument("--stadt", help="Stadtname")
+    _add_json_option(station)
+    station.set_defaults(func=cmd_station)
+
     return parser
 
 
@@ -289,6 +297,96 @@ def cmd_stationen(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
         )
     _emit(json_mode, lines, payload)
     return 0
+
+
+def _radtypen(place: dict[str, Any]) -> dict[str, int]:
+    result: dict[str, int] = {}
+    raw = place.get("bike_types")
+    if isinstance(raw, dict):
+        for typ, count in raw.items():
+            try:
+                result[str(typ)] = int(count)
+            except (TypeError, ValueError):
+                continue
+    return dict(sorted(result.items(), key=lambda item: int(item[0])))
+
+
+def _radnummern(place: dict[str, Any]) -> list[int]:
+    numbers: list[int] = []
+    raw = place.get("bike_numbers")
+    if not isinstance(raw, list):
+        raw = []
+        for bike in place.get("bike_list") or []:
+            if isinstance(bike, dict):
+                raw.append(bike.get("number"))
+    for number in raw:
+        try:
+            numbers.append(int(number))
+        except (TypeError, ValueError):
+            continue
+    return numbers
+
+
+def _city_ref(city: dict[str, Any]) -> dict[str, Any]:
+    return {"uid": city["uid"], "name": city["name"]}
+
+
+def cmd_station(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
+    city = _city_for_args(api, args)
+    data_city, places = api.city(city["uid"])
+    city = {**city, "name": data_city.get("name", city["name"])}
+    place = resolve_station(places, args.name, _choose)
+    number = _as_int(place.get("number"))
+    available = _as_int(place.get("bikes_available_to_rent")) or 0
+    bikes = _as_int(place.get("bikes")) or 0
+    free_racks = _as_int(place.get("free_racks")) or 0
+    racks = _as_int(place.get("bike_racks")) or 0
+    radtypen = _radtypen(place)
+    radnummern = _radnummern(place)
+    maintenance = bool(place.get("maintenance"))
+    active = _as_int(place.get("active_place"))
+    payload = {
+        "station": {
+            "nummer": number,
+            "name": place.get("name"),
+            "stadt": _city_ref(city),
+            "lat": _as_float(place.get("lat")),
+            "lng": _as_float(place.get("lng")),
+            "raeder": bikes,
+            "ausleihbar": available,
+            "stellplaetze": racks,
+            "freie_stellplaetze": free_racks,
+            "wartung": maintenance,
+            "radtypen": radtypen,
+            "radnummern": radnummern,
+        }
+    }
+    types_text = ", ".join(
+        f"{typ} ({count})" for typ, count in radtypen.items()
+    ) or "–"
+    numbers_text = ", ".join(str(number) for number in radnummern) or "–"
+    lines = [
+        f"{place.get('name')} (Station {number})",
+        f"{city['name']} · {_format_coord(place.get('lat'))}, "
+        f"{_format_coord(place.get('lng'))}",
+        f"Räder: {bikes} ({available} ausleihbar) · "
+        f"Stellplätze frei: {free_racks} von {racks}",
+        f"Radtypen: {types_text}",
+        f"Radnummern: {numbers_text}",
+    ]
+    if maintenance:
+        lines.append("Wartung: ja")
+    if active == 0:
+        lines.append("Hinweis: Station ist deaktiviert")
+    _emit(json_mode, lines, payload)
+    return 0
+
+
+def _as_float(value: object) -> float | None:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
 
 
 def _report_error(error: CliError, json_mode: bool) -> int:
