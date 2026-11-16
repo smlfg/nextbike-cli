@@ -116,6 +116,12 @@ def _build_parser() -> Parser:
     _add_json_option(nah)
     nah.set_defaults(func=cmd_nah)
 
+    rad = subparsers.add_parser("rad", help="Rad per Nummer finden")
+    rad.add_argument("nummer", help="Radnummer")
+    rad.add_argument("--stadt", help="Stadtname")
+    _add_json_option(rad)
+    rad.set_defaults(func=cmd_rad)
+
     return parser
 
 
@@ -520,6 +526,98 @@ def cmd_nah(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
             f"{_as_int(place.get('bikes_available_to_rent')) or 0} ausleihbar, "
             f"{_as_int(place.get('free_racks')) or 0} Stellplätze frei"
         )
+    _emit(json_mode, lines, payload)
+    return 0
+
+
+def _battery(place: dict[str, Any], number: int) -> dict[str, Any] | None:
+    info = next(
+        (
+            bike
+            for bike in place.get("bike_list") or []
+            if isinstance(bike, dict) and _as_int(bike.get("number")) == number
+        ),
+        {},
+    )
+    pack = info.get("battery_pack")
+    percentage = None
+    range_km = None
+    if isinstance(pack, dict):
+        percentage = _as_int(pack.get("percentage"))
+        range_km = _as_int(pack.get("estimated_range_km"))
+    if percentage is None:
+        percentage = _as_int(info.get("pedelec_battery"))
+    if percentage is None and range_km is None:
+        return None
+    return {"prozent": percentage, "reichweite_km": range_km}
+
+
+def cmd_rad(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
+    try:
+        target = int(str(args.nummer).strip())
+    except ValueError:
+        raise usage(
+            f"Radnummer „{args.nummer}“ ist keine Zahl.",
+            "Nutze nextbike rad 431211 --stadt Mannheim.",
+        ) from None
+    city = _city_for_args(api, args)
+    data_city, places = api.city(city["uid"])
+    city = {**city, "name": data_city.get("name", city["name"])}
+    place = None
+    bike_info: dict[str, Any] = {}
+    for candidate in places:
+        if target in _radnummern(candidate):
+            place = candidate
+            bike_info = next(
+                (
+                    bike
+                    for bike in candidate.get("bike_list") or []
+                    if isinstance(bike, dict)
+                    and _as_int(bike.get("number")) == target
+                ),
+                {},
+            )
+            break
+    if place is None:
+        raise CliError(
+            "RAD_NICHT_GEFUNDEN",
+            f"Rad {target} nicht in {city['name']} gefunden.",
+            "Prüfe --stadt oder nutze nextbike stationen STADT.",
+            1,
+        )
+    number = _as_int(place.get("number"))
+    freestanding = bool(place.get("bike"))
+    typ = bike_info.get("bike_type")
+    zustand = bike_info.get("state") or "unbekannt"
+    akku = _battery(place, target)
+    station_ref: dict[str, Any] = {"name": place.get("name")}
+    if not freestanding:
+        station_ref["nummer"] = number
+    payload: dict[str, Any] = {
+        "radnummer": target,
+        "stadt": _city_ref(city),
+        "station": station_ref,
+        "typ": str(typ) if typ is not None else "unbekannt",
+        "zustand": zustand,
+    }
+    if akku is not None:
+        payload["akku"] = akku
+    if freestanding:
+        lines = [f"Rad {target} · {place.get('name')}"]
+    else:
+        lines = [f"Rad {target} · {place.get('name')} ({number})"]
+    lines.append(
+        f"{city['name']} · Typ {payload['typ']} · Zustand {zustand}"
+    )
+    if akku is not None:
+        percentage = akku.get("prozent")
+        range_km = akku.get("reichweite_km")
+        if percentage is not None and range_km is not None:
+            lines.append(f"Akku: {percentage} % (ca. {range_km} km)")
+        elif percentage is not None:
+            lines.append(f"Akku: {percentage} %")
+        elif range_km is not None:
+            lines.append(f"Akku: ca. {range_km} km")
     _emit(json_mode, lines, payload)
     return 0
 
