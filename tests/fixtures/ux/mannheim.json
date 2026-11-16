@@ -1,0 +1,606 @@
+{
+  "countries": [
+    {
+      "cities": [
+        {
+          "uid": 195,
+          "name": "Mannheim",
+          "lat": 49.4869,
+          "lng": 8.45638,
+          "zoom": 12,
+          "num_places": 112,
+          "refresh_rate": "10120",
+          "website": "https://www.vrnnextbike.de/",
+          "places": [
+            {
+              "uid": 339350,
+              "lat": 49.506903,
+              "lng": 8.492206,
+              "bike": false,
+              "name": "Studentensiedlung Ludwig Frank",
+              "number": 25003,
+              "bikes": 0,
+              "bikes_available_to_rent": 0,
+              "active_place": 1,
+              "bike_racks": 0,
+              "free_racks": 0,
+              "maintenance": false,
+              "bike_list": [],
+              "bike_numbers": [],
+              "bike_types": {},
+              "place_type": "0"
+            },
+            {
+              "uid": 339461,
+              "lat": 49.485357,
+              "lng": 8.47665,
+              "bike": false,
+              "name": "Kongresszentrum Rosengarten",
+              "number": 25009,
+              "bikes": 0,
+              "bikes_available_to_rent": 0,
+              "active_place": 1,
+              "bike_racks": 12,
+              "free_racks": 12,
+              "maintenance": false,
+              "bike_list": [],
+              "bike_numbers": [],
+              "bike_types": {},
+              "place_type": "0"
+            },
+            {
+              "uid": 339478,
+              "lat": 49.470261,
+              "lng": 8.482255,
+              "bike": false,
+              "name": "Technische Hochschule Mannheim",
+              "number": 25020,
+              "bikes": 9,
+              "bikes_available_to_rent": 9,
+              "active_place": 1,
+              "bike_racks": 10,
+              "free_racks": 1,
+              "maintenance": true,
+              "bike_list": [
+                {
+                  "number": "42827",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430187",
+                  "bike_type": 71,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431085",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "44425",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431259",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431993",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431982",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431810",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431644",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                }
+              ],
+              "bike_numbers": [
+                "42827",
+                "430187",
+                "431085",
+                "44425",
+                "431259",
+                "431993",
+                "431982",
+                "431810",
+                "431644"
+              ],
+              "bike_types": {
+                "71": 1,
+                "196": 8
+              },
+              "place_type": "0"
+            },
+            {
+              "uid": 121376,
+              "lat": 49.477082,
+              "lng": 8.463662,
+              "bike": false,
+              "name": "Lindenhof - Jugendherberge",
+              "number": 25026,
+              "bikes": 3,
+              "bikes_available_to_rent": 3,
+              "active_place": 1,
+              "bike_racks": 6,
+              "free_racks": 3,
+              "maintenance": false,
+              "bike_list": [
+                {
+                  "number": "430037",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430852",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430059",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                }
+              ],
+              "bike_numbers": [
+                "430037",
+                "430852",
+                "430059"
+              ],
+              "bike_types": {
+                "196": 3
+              },
+              "place_type": "0"
+            },
+            {
+              "uid": 1557693,
+              "lat": 49.47365,
+              "lng": 8.46642,
+              "bike": false,
+              "name": "Lindenhof - Johanniskirche",
+              "number": 25028,
+              "bikes": 1,
+              "bikes_available_to_rent": 1,
+              "active_place": 1,
+              "bike_racks": 6,
+              "free_racks": 2,
+              "maintenance": false,
+              "bike_list": [
+                {
+                  "number": "431932",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                }
+              ],
+              "bike_numbers": [
+                "431932"
+              ],
+              "bike_types": {
+                "196": 1
+              },
+              "place_type": "0"
+            },
+            {
+              "uid": 30612064,
+              "lat": 49.469205,
+              "lng": 8.470915,
+              "bike": false,
+              "name": "Lindenhof - Meeräckerplatz",
+              "number": 25066,
+              "bikes": 15,
+              "bikes_available_to_rent": 15,
+              "active_place": 1,
+              "bike_racks": 0,
+              "free_racks": 0,
+              "maintenance": false,
+              "bike_list": [
+                {
+                  "number": "42824",
+                  "bike_type": 71,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430221",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430192",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430040",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "432524",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430420",
+                  "bike_type": 150,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431098",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431211",
+                  "bike_type": 179,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": 100,
+                  "battery_pack": {
+                    "percentage": 100,
+                    "estimated_range_km": 60
+                  }
+                },
+                {
+                  "number": "431207",
+                  "bike_type": 179,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": 83,
+                  "battery_pack": {
+                    "percentage": 83,
+                    "estimated_range_km": 48
+                  }
+                },
+                {
+                  "number": "431206",
+                  "bike_type": 179,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": 96,
+                  "battery_pack": {
+                    "percentage": 96,
+                    "estimated_range_km": 57
+                  }
+                },
+                {
+                  "number": "431575",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "432036",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431853",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431852",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "432515",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                }
+              ],
+              "bike_numbers": [
+                "42824",
+                "430221",
+                "430192",
+                "430040",
+                "432524",
+                "430420",
+                "431098",
+                "431211",
+                "431207",
+                "431206",
+                "431575",
+                "432036",
+                "431853",
+                "431852",
+                "432515"
+              ],
+              "bike_types": {
+                "71": 1,
+                "150": 1,
+                "179": 3,
+                "196": 10
+              },
+              "place_type": "18"
+            },
+            {
+              "uid": 28450242,
+              "lat": 49.473974,
+              "lng": 8.472009,
+              "bike": false,
+              "name": "Lindenhof - Hanns-Glückstein-Park",
+              "number": 25067,
+              "bikes": 14,
+              "bikes_available_to_rent": 14,
+              "active_place": 1,
+              "bike_racks": 0,
+              "free_racks": 0,
+              "maintenance": false,
+              "bike_list": [
+                {
+                  "number": "42898",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430372",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430368",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430312",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430212",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430180",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430177",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "430009",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431439",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431428",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431350",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431506",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "432040",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                },
+                {
+                  "number": "431761",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                }
+              ],
+              "bike_numbers": [
+                "42898",
+                "430372",
+                "430368",
+                "430312",
+                "430212",
+                "430180",
+                "430177",
+                "430009",
+                "431439",
+                "431428",
+                "431350",
+                "431506",
+                "432040",
+                "431761"
+              ],
+              "bike_types": {
+                "196": 14
+              },
+              "place_type": "0"
+            },
+            {
+              "uid": 58196617,
+              "lat": 49.476208,
+              "lng": 8.470888,
+              "bike": false,
+              "name": "Lindenhof / NTR",
+              "number": 25089,
+              "bikes": 0,
+              "bikes_available_to_rent": 0,
+              "active_place": 1,
+              "bike_racks": 0,
+              "free_racks": 0,
+              "maintenance": false,
+              "bike_list": [],
+              "bike_numbers": [],
+              "bike_types": {},
+              "place_type": "0"
+            },
+            {
+              "uid": 364019650,
+              "lat": 49.477839,
+              "lng": 8.467814,
+              "bike": false,
+              "name": "Lindenhofplatz / HBF Süd",
+              "number": 25096,
+              "bikes": 1,
+              "bikes_available_to_rent": 0,
+              "active_place": 1,
+              "bike_racks": 0,
+              "free_racks": 0,
+              "maintenance": false,
+              "bike_list": [
+                {
+                  "number": "432287",
+                  "bike_type": 196,
+                  "active": true,
+                  "state": "ok",
+                  "pedelec_battery": null,
+                  "battery_pack": null
+                }
+              ],
+              "bike_numbers": [
+                "432287"
+              ],
+              "bike_types": {
+                "196": 1
+              },
+              "place_type": "0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

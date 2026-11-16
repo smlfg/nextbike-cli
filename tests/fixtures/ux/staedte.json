@@ -1,0 +1,56 @@
+{
+  "countries": [
+    {
+      "cities": [
+        {
+          "uid": 362,
+          "name": "Berlin",
+          "lat": 52.5087,
+          "lng": 13.3563,
+          "zoom": 12,
+          "num_places": 4291
+        },
+        {
+          "uid": 21,
+          "name": "Karlsruhe",
+          "lat": 49.0102,
+          "lng": 8.41827,
+          "zoom": 10,
+          "num_places": 554
+        },
+        {
+          "uid": 1,
+          "name": "Leipzig",
+          "lat": 51.3435,
+          "lng": 12.3637,
+          "zoom": 11,
+          "num_places": 1212
+        },
+        {
+          "uid": 860,
+          "name": "Roche - Mannheim",
+          "lat": 49.5346,
+          "lng": 8.47004,
+          "zoom": 12,
+          "num_places": 41
+        },
+        {
+          "uid": 194,
+          "name": "Heidelberg",
+          "lat": 49.4023,
+          "lng": 8.67577,
+          "zoom": 12,
+          "num_places": 70
+        },
+        {
+          "uid": 195,
+          "name": "Mannheim",
+          "lat": 49.4869,
+          "lng": 8.45638,
+          "zoom": 12,
+          "num_places": 112
+        }
+      ]
+    }
+  ]
+}
