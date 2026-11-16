@@ -23,8 +23,16 @@ USER_AGENT = (
 
 def base_url() -> str:
     import os
+    from urllib.parse import urlsplit
 
-    return (os.environ.get("NEXTBIKE_BASE_URL") or DEFAULT_BASE_URL).strip()
+    value = (os.environ.get("NEXTBIKE_BASE_URL") or DEFAULT_BASE_URL).strip()
+    parsed = urlsplit(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise source_error(
+            "NEXTBIKE_BASE_URL ist keine gültige http(s)-Basis-URL.",
+            "Setze NEXTBIKE_BASE_URL zum Beispiel auf https://maps2.nextbike.net/maps.",
+        )
+    return value
 
 
 def parse_cities(payload: object) -> list[dict[str, Any]]:

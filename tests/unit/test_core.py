@@ -109,3 +109,32 @@ def test_parse_cities_fehlerhaftes_schema() -> None:
     with pytest.raises(Exception) as info:
         parse_cities({"countries": []})
     assert getattr(info.value, "exit_code", None) == 3
+
+
+def test_ungueltige_basis_url_ist_quellenfehler(monkeypatch) -> None:
+    monkeypatch.setenv("NEXTBIKE_BASE_URL", "keine-url")
+    with pytest.raises(Exception) as info:
+        Api()
+    assert getattr(info.value, "exit_code", None) == 3
+
+
+def test_main_faengt_strg_c_ohne_traceback(monkeypatch, capsys) -> None:
+    from nextbike import cli
+
+    def interrupt(*_args, **_kwargs):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(cli, "_run", interrupt)
+    assert cli.main([]) == 130
+    assert "Traceback" not in capsys.readouterr().err
+
+
+def test_main_faengt_eof_ohne_traceback(monkeypatch, capsys) -> None:
+    from nextbike import cli
+
+    def eof(*_args, **_kwargs):
+        raise EOFError
+
+    monkeypatch.setattr(cli, "_run", eof)
+    assert cli.main([]) == 2
+    assert "Traceback" not in capsys.readouterr().err
