@@ -51,8 +51,10 @@ def resolve_city(
             1,
         )
     exact = [city for city in matches if normalize(city["name"]) == normalize(query)]
-    if exact:
+    if len(exact) == 1:
         return exact[0]
+    if exact:
+        return choose("Stadt", exact, city_summary)
     unique_partial = [
         city for city in matches if normalize(query) in normalize(city["name"])
     ]
@@ -60,8 +62,7 @@ def resolve_city(
         return unique_partial[0]
     if len(matches) == 1:
         return matches[0]
-    choose("Stadt", matches, city_summary)
-    raise AssertionError("choose muss zurückkehren oder abbrechen")
+    return choose("Stadt", matches, city_summary)
 
 
 def city_summary(city: dict[str, Any]) -> str:
@@ -124,10 +125,11 @@ def resolve_station(
     ]
     if len(exact) == 1:
         return exact[0]
+    if exact:
+        return choose("Station", exact, station_summary)
     if len(matches) == 1:
         return matches[0]
-    choose("Station", matches, station_summary)
-    raise AssertionError("choose muss zurückkehren oder abbrechen")
+    return choose("Station", matches, station_summary)
 
 
 def station_summary(place: dict[str, Any]) -> str:

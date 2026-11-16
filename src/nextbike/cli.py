@@ -353,7 +353,13 @@ def _radtypen(place: dict[str, Any]) -> dict[str, int]:
                 result[str(typ)] = int(count)
             except (TypeError, ValueError):
                 continue
-    return dict(sorted(result.items(), key=lambda item: int(item[0])))
+    def sort_key(item: tuple[str, int]) -> tuple[int, str]:
+        try:
+            return int(item[0]), item[0]
+        except ValueError:
+            return 10**9, item[0]
+
+    return dict(sorted(result.items(), key=sort_key))
 
 
 def _radnummern(place: dict[str, Any]) -> list[int]:
