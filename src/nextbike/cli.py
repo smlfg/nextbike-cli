@@ -122,6 +122,21 @@ def _build_parser() -> Parser:
     _add_json_option(rad)
     rad.set_defaults(func=cmd_rad)
 
+    watch = subparsers.add_parser(
+        "watch", help="Verfügbarkeit einer Station beobachten"
+    )
+    watch.add_argument("name", help="Stationsname oder Stationsnummer")
+    watch.add_argument("--stadt", help="Stadtname")
+    watch.add_argument(
+        "--unter",
+        type=_non_negative_int,
+        default=None,
+        metavar="N",
+        help="warnen, wenn weniger als N Räder ausleihbar sind",
+    )
+    _add_json_option(watch)
+    watch.set_defaults(func=cmd_watch)
+
     return parser
 
 
@@ -618,6 +633,77 @@ def cmd_rad(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
             lines.append(f"Akku: {percentage} %")
         elif range_km is not None:
             lines.append(f"Akku: ca. {range_km} km")
+    _emit(json_mode, lines, payload)
+    return 0
+
+
+def _watch_key(city: dict[str, Any], number: int | None) -> str:
+    return f"{city['uid']}:{number}"
+
+
+def cmd_watch(args: argparse.Namespace, api: Api, json_mode: bool) -> int:
+    city = _city_for_args(api, args)
+    data_city, places = api.city(city["uid"])
+    city = {**city, "name": data_city.get("name", city["name"])}
+    place = resolve_station(places, args.name, _choose)
+    number = _as_int(place.get("number"))
+    available = _as_int(place.get("bikes_available_to_rent")) or 0
+    key = _watch_key(city, number)
+    path = store.state_path()
+    raw = store.read_json(path)
+    if path.exists() and not isinstance(raw, dict):
+        print(
+            "Hinweis: Watch-Stand ist unlesbar und wird neu angelegt.",
+            file=sys.stderr,
+        )
+        raw = {}
+    state = raw if isinstance(raw, dict) else {}
+    previous_entry = state.get(key)
+    previous = None
+    if isinstance(previous_entry, dict):
+        previous = _as_int(previous_entry.get("verfuegbar"))
+    first_call = previous is None
+    changed = previous is not None and previous != available
+    warning = args.unter is not None and available < args.unter
+    state[key] = {
+        "verfuegbar": available,
+        "name": place.get("name"),
+        "stadt": _city_ref(city),
+        "nummer": number,
+    }
+    try:
+        store.write_json_atomic(path, state)
+    except OSError:
+        print(
+            "Hinweis: Watch-Stand konnte nicht gespeichert werden.",
+            file=sys.stderr,
+        )
+    payload = {
+        "station": {
+            "nummer": number,
+            "name": place.get("name"),
+            "stadt": _city_ref(city),
+        },
+        "verfuegbar": available,
+        "vorher": previous,
+        "veraendert": changed,
+        "erster_aufruf": first_call,
+        "schwelle": args.unter,
+        "warnung": warning,
+    }
+    lines = [f"{place.get('name')} ({number}): {available} Räder verfügbar"]
+    if first_call:
+        lines.append("Erster Aufruf – Stand gespeichert.")
+    elif changed:
+        lines.append(
+            f"Verändert seit letztem Aufruf: {previous} → {available} ausleihbar."
+        )
+    else:
+        lines.append("Unverändert seit letztem Aufruf.")
+    if warning:
+        lines.append(
+            f"Warnung: {available} ausleihbar, unter Schwelle {args.unter}."
+        )
     _emit(json_mode, lines, payload)
     return 0
 
