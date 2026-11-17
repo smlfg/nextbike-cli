@@ -3,6 +3,7 @@
 - Datum: 2026-11-17
 - Version: 0.1.0
 - Commit: 5aec285 (origin/main, Arbeitsbaum sauber)
+- Nachprüfung: 2026-11-17 nach Fix 5ec9800 (`fix: Tippfehler-Fallback fuer Stationsnamen mit Praefix`); Live-Befehl erneut ausgeführt, `pytest` 55 passed, `ux_check.py`/`ux_session.py` je Exit 0.
 - Prüfer: unabhängige QA-Iteration (find -> file, kein Code-Fix)
 - Installation: `pipx install git+https://github.com/smlfg/nextbike-cli` in `./scratch/pipx` (Protokoll `scratch/qa/pipx-install.log`), jeder Aufruf über `PATH=$PWD/scratch/pipx/bin:$PATH`.
 - Live-Zugriffe: ausschließlich lesende GETs gegen `https://maps2.nextbike.net/maps`. Kein Login, keine schreibende Aktion; UX09/Login ist laut `docs/UX.md` nicht Teil von v1 (SKIP).
@@ -37,7 +38,7 @@
 | Leeres Ergebnis Suche | `nextbike --json stationen Mannheim XyzNope` | Hinweis, Exit 0 | OK | `"stationen": []`, Exit 0 |
 | Stadt mit Tippfehler | `nextbike --json staedte Mannhein` | Mannheim gefunden | OK | Treffer Mannheim (UID 195) |
 | Umlaute | `staedte Munchen`, `station Meerackerplatz` | München bzw. Meeräckerplatz | OK | beide Exit 0, richtige Namen |
-| Station mit Tippfehler | `nextbike --json station Jugendherbrge --stadt Mannheim` | Tippfehler-Fallback laut `INTERFACE.md` | **FAIL** | Exit 1 `STATION_NICHT_GEFUNDEN`; `Lindenhof - Jugendherbrge` (voller Name) funktioniert, kurze Tippvarianten nicht |
+| Station mit Tippfehler | `nextbike --json station Jugendherbrge --stadt Mannheim` | Tippfehler-Fallback laut `INTERFACE.md` | OK (nach Fix 5ec9800) | Exit 0, Station 25026 `Lindenhof - Jugendherberge`; ebenso `Meerackerplaz` → 25066, `Lindenhopf` → Exit 2 mit Lindenhof-Kandidaten |
 | Mehrdeutige Stadt im TTY | `printf '1\n' \| script -qc "nextbike stationen Mann"` | nummerierte Auswahl | OK | `1. Mannheim … 3. Roche - Mannheim`, Auswahl 1 liefert Mannheim |
 | Mehrdeutig ohne TTY | `nextbike --json stationen Mann` | Exit 2 mit Kandidatenliste | OK | `code: MEHRDEUTIG`, `kandidaten: [...]`, Exit 2 |
 | Station nicht gefunden | `nextbike --json station "Gibt Es Nicht" --stadt Mannheim` | Exit 1, nächster Schritt | OK | `STATION_NICHT_GEFUNDEN`, `naechster_schritt: Nutze nextbike stationen …` |
@@ -50,18 +51,14 @@
 | Kaputter Watch-Stand | ungültiges `watch.json`, dann `watch` | Hinweis, erster Aufruf | OK | `Hinweis: Watch-Stand ist unlesbar …`, Exit 0 |
 | Fehlende Standardstadt | `station ...` in frischem XDG ohne Config | Exit 2, beide Wege genannt | OK | `Nutze nextbike config stadt STADT oder --stadt STADT.` |
 | Watch-Schwelle | `nextbike watch ... --unter 10` | Warnung, Exit 0 | OK | `Warnung: 5 ausleihbar, unter Schwelle 10.` |
-| Tests | `scratch/venv/bin/pytest -q` | grün | OK | `52 passed` |
+| Tests | `scratch/venv/bin/pytest -q` | grün | OK | `55 passed` (nach Fix 5ec9800) |
 | Login-Sitzung | – | read-only, kein Login in v1 | SKIP | Kein `login`-Befehl, keine `credential_env`; laut `docs/UX.md` UX09 entfällt |
 
 ## Zählung
 
-- **38 OK**, **1 FAIL**, **1 SKIP** (gesamt 40 Zeilen; 39 geprüft, 1 SKIP).
+- **39 OK**, **0 FAIL**, **1 SKIP** (gesamt 40 Zeilen; 39 geprüft, 1 SKIP) nach Nachprüfung und Fix 5ec9800.
 - Live-Zahlen weichen von den README-Beispielen ab (z. B. 107 statt 112 Stationen, 21 statt 6 Treffer im Radius, Akku 99 % statt 100 %). Das sind dynamische Live-Daten, kein Fehler.
 
 ## Offene FAILs
 
-1. **Station-Tippfehler-Fallback wirkt bei kurzen Tippvarianten nicht** (`INTERFACE.md`: „Station: … sonst Tippfehler-Fallback“).
-   - Reproduktion: `nextbike --json station Jugendherbrge --stadt Mannheim`
-   - Ist: Exit 1, `STATION_NICHT_GEFUNDEN`.
-   - Erwartet: Auflösung auf `Lindenhof - Jugendherberge (25026)` über den dokumentierten Tippfehler-Fallback.
-   - Einordnung: `difflib` vergleicht die kurze Eingabe gegen den vollen Stationsnamen; Präfixe wie `Lindenhof - ` drücken die Ähnlichkeit unter den Cutoff. Der Fallback greift nur bei fast vollständig getippten Namen (`Lindenhof - Jugendherbrge` → OK). Kein Code-Fix in dieser QA-Iteration.
+Keine. Der einzige FAIL (Station-Tippfehler-Fallback bei kurzen Tippvarianten) ist mit Commit 5ec9800 behoben und live nachgeprüft: `nextbike --json station Jugendherbrge --stadt Mannheim` liefert Exit 0 und `Lindenhof - Jugendherberge (25026)`.
