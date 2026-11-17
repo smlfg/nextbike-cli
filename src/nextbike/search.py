@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import difflib
+import re
 from typing import Any, Callable, TypeVar
 
 from .errors import CliError
 from .normalize import normalize
 
 T = TypeVar("T")
+_TYPO_CUTOFF = 0.75
+_PART_SPLIT = re.compile(r"[\W_]+")
 
 
 def city_matches(cities: list[dict[str, Any]], query: str) -> list[dict[str, Any]]:
@@ -83,13 +86,36 @@ def station_matches(
     ]
     if partial:
         return partial
-    lookup = {normalize(place.get("name")): place for place in stations}
-    result = []
-    for suggestion in difflib.get_close_matches(
-        needle, list(lookup), n=10, cutoff=0.75
-    ):
-        result.append(lookup[suggestion])
-    return result
+    return _typo_matches(needle, stations)
+
+
+def _typo_matches(needle: str, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Tippfehler-Fallback; vergleicht auch einzelne Namensbestandteile.
+
+    Der volle Stationsname enthält oft einen Präfix („Lindenhof - “). Ein
+    Tippfehler im eigentlichen Namen fällt dann unter den Cutoff, obwohl ein
+    Namensbestandteil fast exakt passt.
+    """
+    scored: list[tuple[float, str, dict[str, Any]]] = []
+    for item in items:
+        name = str(item.get("name") or "")
+        score = _typo_score(needle, name)
+        if score >= _TYPO_CUTOFF:
+            scored.append((score, normalize(name), item))
+    scored.sort(key=lambda entry: (-entry[0], entry[1]))
+    return [item for _, _, item in scored]
+
+
+def _typo_score(needle: str, name: str) -> float:
+    normalized = normalize(name)
+    best = difflib.SequenceMatcher(None, needle, normalized).ratio()
+    tolerance = max(2, round(len(needle) * 0.4))
+    for part in _PART_SPLIT.split(normalized):
+        if part and abs(len(part) - len(needle)) <= tolerance:
+            best = max(
+                best, difflib.SequenceMatcher(None, needle, part).ratio()
+            )
+    return best
 
 
 def resolve_station(

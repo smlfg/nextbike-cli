@@ -74,6 +74,27 @@ def test_resolve_station_nummer() -> None:
     assert station["name"] == "Lindenhof - Jugendherberge"
 
 
+def test_station_tippfehler_ignoriert_namenspraefix() -> None:
+    _, places = parse_city(load("mannheim.json"))
+    matches = station_matches(places, "Jugendherbrge")
+    assert [place["number"] for place in matches] == [25026]
+
+    matches = station_matches(places, "Meerackerplaz")
+    assert [place["number"] for place in matches] == [25066]
+
+
+def test_station_tippfehler_kurzer_praefix_ist_mehrdeutig() -> None:
+    _, places = parse_city(load("mannheim.json"))
+    matches = station_matches(places, "Lindenhopf")
+    assert len(matches) >= 2
+    assert all("Lindenhof" in place["name"] for place in matches)
+
+
+def test_station_tippfehler_ohne_treffer() -> None:
+    _, places = parse_city(load("mannheim.json"))
+    assert station_matches(places, "Gibt Es Nicht") == []
+
+
 def test_haversine_fixture() -> None:
     assert haversine_m(49.4771, 8.4637, 49.477082, 8.463662) == 3
 
